@@ -31,8 +31,10 @@ class Bot(pw.Reddit):
                 password = password
                 )
 
+        print(self.user.me())
         self.read_only = True
         print('read_only: ',self.read_only)
+        
 
         subreddit = self.subreddit('learnProgramming')
 
@@ -47,5 +49,7 @@ bot = Bot(
     client_id = os.getenv("client_id"),
     client_secret = os.getenv("client_secret"),
     user_agent = os.getenv("user_agent"),
-    username = os.getenv("username"),
-    password = os.getenv("password"))
+    username = os.getenv("redditUsername"),
+    password = os.getenv("redditPassword"))
+
+print(os.getenv("username"))
