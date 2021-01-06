@@ -10,11 +10,15 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-
 #sub class of prasws Reddit class
 class Bot(pw.Reddit):
     ''' A reddit bot class '''
 
+    #only enter lower case
+    keyWords = ['london', 'g', 'fam', 'inabit', 'sn',
+                'lewisham', 'safe', '420', 'wag1',
+                'wagwan']
+    
     def __init__(self,
                  client_id,
                  client_secret,
@@ -23,25 +27,59 @@ class Bot(pw.Reddit):
                  password = None
                  ):
         ''' this is the bots constructor '''
-        super(Bot, self).__init__(
-                client_id = client_id,
-                client_secret = client_secret,
-                user_agent = user_agent,
-                username = username,
-                password = password
-                )
+        try:
+            super(Bot, self).__init__(
+                    client_id = client_id,
+                    client_secret = client_secret,
+                    user_agent = user_agent,
+                    username = username,
+                    password = password
+                    )
+        except:
+            print('Failed to authenticate')
+            print('/*************\\ \n')
 
-        print(self.user.me())
-        self.read_only = True
-        print('read_only: ',self.read_only)
+        else:
+            print('Signed in as:',self.user.me())
+            print('read_only:',self.read_only)
+            print('/*************\\ \n')
+            
+    
+    def lookForKeyWords(self, name, numPost = 10, numCom = 10):
+        ''' This method returns a list of
+            comments that had the keyword '''
+
+        print('\n\n\t\tSearching',name,'\n\n')
         
+        subreddit = self.subreddit(name)
 
-        subreddit = self.subreddit('learnProgramming')
-
-        for submit in subreddit.top(limit = 1):
+        for submit in subreddit.hot(limit = numPost):
             print('New post:\n')
-            print(submit.title)
-            print()
+            print('Title:',submit.title,'\n')
+            
+            comments = submit.comments
+            matches = []
+            commentRange = numCom
+
+            
+            for word in Bot.keyWords:
+                for i in range(commentRange):
+                    try:
+                        if word in comments[i].body.lower():
+                            print('Matched comment')
+                            comment = comments[i]
+                            info = [comment.id, comment.author, word]
+                            matches.append(info)
+                    
+                    except IndexError as e:
+                        print(e)
+                        break
+                                          
+                         
+        return matches
+
+    def sendComments(matches):
+        ''' will send a comment to the matches ''' 
 
 
 #initalsing instance of Reddit class
@@ -52,4 +90,11 @@ bot = Bot(
     username = os.getenv("redditUsername"),
     password = os.getenv("redditPassword"))
 
-print(os.getenv("username"))
+matches = bot.lookForKeyWords('coding', numPost = 10, numCom = 20)
+matches.append(bot.lookForKeyWords('learnProgramming', numPost = 10, numCom = 20))
+matches.append(bot.lookForKeyWords('python', numPost = 10, numCom = 20))
+matches.append(bot.lookForKeyWords('developer', numPost = 10, numCom = 20))
+
+print('\n\nNumber of matches',str(len(matches)))
+
+input('Enter to exit')
