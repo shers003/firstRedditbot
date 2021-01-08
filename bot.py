@@ -15,12 +15,18 @@ class Bot(pw.Reddit):
     ''' A reddit bot class '''
 
     #only enter lower case
+    
     keyWords = ['london', ' g ', 'fam', 'inabit', ' sn ',
                 'lewisham', 'safe', ' 420 ', 'wag1',
                 'wagwan', 'catford', 'ladywell',
                 'brockley', 'croften', ' 69 ', 'bruv',
                 'brudda']
     
+    #fpr testing purposes
+    '''
+    keyWords = ['code', 'python', 'thanks', 'thx'
+                'nice', 'api', 'error']
+    '''
     def __init__(self,
                  client_id,
                  client_secret,
@@ -50,7 +56,7 @@ class Bot(pw.Reddit):
     def lookForKeyWords(self, name, numPost = 10, numCom = 10):
         ''' This method returns a list of
             comments that had the keyword '''
-
+	
         print('\n\n\t\tSearching',name,'\n\n')
         
         subreddit = self.subreddit(name)
@@ -89,7 +95,8 @@ class Bot(pw.Reddit):
                 comAuthor = str(match[1])
                 matchedWord = str(match[2])
             except IndexError:
-                print('Was an index error')
+                print('Was an index error with: ',end='')
+                print(match)
                 continue
             
             if comId in self.replied_to:
@@ -102,12 +109,16 @@ class Bot(pw.Reddit):
             elif matchedWord == '69':
                 reply = '69 nice'
                 
-            else:    
+            else:
+                
                 reply = 'Yo ' + comAuthor + ' I noticed you said ' + matchedWord
                 reply += '. I know the chances are slim but if by any chance'
                 reply += ' you\'re from SE London, I just want to take this opertunity to say:'
                 reply += ' hope you have a great day, much love my g!!'
                 reply += '\n\nThis is a bot btw'
+                
+                #for test purposes
+                #reply = 'Have a nice day form this bot'
 
             #added this try to combat rate error
             try:
