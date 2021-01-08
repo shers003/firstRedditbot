@@ -15,10 +15,10 @@ class Bot(pw.Reddit):
     ''' A reddit bot class '''
 
     #only enter lower case
-    keyWords = ['london', 'g', 'fam', 'inabit', 'sn',
-                'lewisham', 'safe', '420', 'wag1',
+    keyWords = ['london', ' g ', 'fam', 'inabit', ' sn ',
+                'lewisham', 'safe', ' 420 ', 'wag1',
                 'wagwan', 'catford', 'ladywell',
-                'brockley', 'croften', '69', 'bruv',
+                'brockley', 'croften', ' 69 ', 'bruv',
                 'brudda']
     
     def __init__(self,
@@ -81,17 +81,19 @@ class Bot(pw.Reddit):
         return matches
 
     def sendComments(self, matches):
-        ''' will send a comment to the matches '''
-
-        #make this a file that gets read chapter 7
-        replied_to = []
+        ''' will send a comment to the matches '''        
 
         for match in matches:
-            comId = match[0]
-            comAuthor = str(match[1])
-            matchedWord = str(match[2])
-
-            if comId in replied_to:
+            try:
+                comId = match[0]
+                comAuthor = str(match[1])
+                matchedWord = str(match[2])
+            except IndexError:
+                print('Was an index error')
+                continue
+            
+            if comId in self.replied_to:
+                print('already replied to',comId)
                 continue
             
             elif matchedWord == '420':
@@ -107,10 +109,46 @@ class Bot(pw.Reddit):
                 reply += ' hope you have a great day, much love my g!!'
                 reply += '\n\nThis is a bot btw'
 
-            comment = self.comment(comId)
-            comment.reply(reply)
-            comment.upvote()
-            replied_to.append(comId)
+            #added this try to combat rate error
+            try:
+                self.new_replied_to = comId
+                comment = self.comment(comId)
+                comment.reply(reply)
+                comment.upvote()
+                
+                print('replied to user:',comAuthor,comId)
+
+            except:
+                print('Error occured with comment:',comId)
+                
+                
+    @property
+    def replied_to(self):
+
+        file = open('replied_to.txt', 'r')
+        replied_to = []
+        name = ' '
+        count = 0
+        while True:
+            count += 1
+            name = file.readline()
+            name = name.strip('\n')
+            if name == '':
+                break
+            else:    
+                replied_to.append(name)
+                
+        file.close()
+
+        return replied_to
+    
+    @replied_to.setter
+    def new_replied_to(self, newId):
+        file = open('replied_to.txt', 'a')
+        file.write(newId+'\n')
+        file.close()
+
+            
          
 #initalsing instance of Reddit class
 bot = Bot(
@@ -120,8 +158,7 @@ bot = Bot(
     username = os.getenv("redditUsername"),
     password = os.getenv("redditPassword"))
 
-matches = bot.lookForKeyWords('coding', numPost = 5, numCom = 10)
-#matches.append(bot.lookForKeyWords('learnProgramming', numPost = 10, numCom = 20))
+matches = bot.lookForKeyWords('learnProgramming', numPost = 10, numCom = 10)
 #matches.append(bot.lookForKeyWords('python', numPost = 10, numCom = 20))
 #matches.append(bot.lookForKeyWords('developer', numPost = 10, numCom = 20))
 
@@ -130,5 +167,6 @@ for match in matches:
     print(match)
 
 bot.sendComments(matches)
+
 
 input('Enter to exit')
