@@ -32,14 +32,13 @@ class Bot(pw.Reddit):
         file.close()
         
         return keywords
+    
     @keyWords.setter
     def new_keyWord(self, word):
         file = open('keyWords.txt', 'a')
         file.write(word+'\n')
         file.close()
-    
 
-    
     @property
     def replied_to(self):
         ''' Property returns list of comments ids '''
@@ -138,8 +137,9 @@ class Bot(pw.Reddit):
             
             comments = submit.comments
             matches = []
+            keywords = self.keyWords
                         
-            for word in Bot.keyWords:
+            for word in keywords:
                 for i in range(numCom):
                     try:
                         if word in comments[i].body.lower():
