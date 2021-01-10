@@ -15,18 +15,84 @@ class Bot(pw.Reddit):
     ''' A reddit bot class '''
 
     #only enter lower case
+    @property
+    def keyWords(self):
+        file = open('keyWords.txt', 'r')
+        keywords = []
+        word = ''
+        count = 0
+        while True:
+            count += 1
+            word = file.readline()
+            word = word.strip('\n')
+            if word == '':
+                break
+            else:
+                keywords.append(word)
+        file.close()
+        
+        return keywords
+    @keyWords.setter
+    def new_keyWord(self, word):
+        file = open('keyWords.txt', 'a')
+        file.write(word+'\n')
+        file.close()
     
-    keyWords = ['london', ' g ', 'fam', 'inabit', ' sn ',
-                'lewisham', 'safe', ' 420 ', 'wag1',
-                'wagwan', 'catford', 'ladywell',
-                'brockley', 'croften', ' 69 ', 'bruv',
-                'brudda']
+
     
-    #fpr testing purposes
-    '''
-    keyWords = ['code', 'python', 'thanks', 'thx'
-                'nice', 'api', 'error']
-    '''
+    @property
+    def replied_to(self):
+        ''' Property returns list of comments ids '''
+        file = open('replied_to.txt', 'r')
+        replied_to = []
+        name = ' '
+        count = 0
+        while True:
+            count += 1
+            name = file.readline()
+            name = name.strip('\n')
+            if name == '':
+                break
+            else:    
+                replied_to.append(name)
+                
+        file.close()
+
+        return replied_to
+    
+    @replied_to.setter
+    def new_replied_to(self, newId):
+        file = open('replied_to.txt', 'a')
+        file.write(newId+'\n')
+        file.close()
+
+    @property
+    def my_comment_ids(self):
+        ''' Property returns list of comments ids '''
+        
+        file = open('my_comment_ids.txt', 'r')
+        replied_to = []
+        name = ' '
+        count = 0
+        while True:
+            count += 1
+            name = file.readline()
+            name = name.strip('\n')
+            if name == '':
+                break
+            else:    
+                replied_to.append(name)
+                
+        file.close()
+
+        return replied_to
+    
+    @replied_to.setter
+    def new_my_comment_id(self, newId):
+        file = open('my_comment_ids.txt', 'a')
+        file.write(newId+'\n')
+        file.close()
+                       
     def __init__(self,
                  client_id,
                  client_secret,
@@ -52,15 +118,20 @@ class Bot(pw.Reddit):
             print('read_only:',self.read_only)
             print('/*************\\ \n')
             
-    
     def lookForKeyWords(self, name, numPost = 10, numCom = 10):
         ''' This method returns a list of
             comments that had the keyword '''
 	
         print('\n\n\t\tSearching',name,'\n\n')
-        
-        subreddit = self.subreddit(name)
 
+        subreddit = self.subreddit(name)
+        
+        try:
+            subreddit.id
+        except:
+            print('Invalid subreddit')
+            return []
+        
         for submit in subreddit.hot(limit = numPost):
             print('New post:\n')
             print('Title:',submit.title,'\n')
@@ -98,6 +169,9 @@ class Bot(pw.Reddit):
                 print('Was an index error with: ',end='')
                 print(match)
                 continue
+            except Exception as e:
+                print(e,':',match)
+                continue
             
             if comId in self.replied_to:
                 print('already replied to',comId)
@@ -113,54 +187,79 @@ class Bot(pw.Reddit):
                 
                 reply = 'Yo ' + comAuthor + ' I noticed you said ' + matchedWord
                 reply += '. I know the chances are slim but if by any chance'
-                reply += ' you\'re from SE London, I just want to take this opertunity to say:'
+                reply += ' you\'re from London, I just want to take this opertunity to say:'
                 reply += ' hope you have a great day, much love my g!!'
                 reply += '\n\nThis is a bot btw'
                 
-                #for test purposes
-                #reply = 'Have a nice day form this bot'
-
             #added this try to combat rate error
             try:
                 self.new_replied_to = comId
                 comment = self.comment(comId)
                 comment.reply(reply)
                 comment.upvote()
+                self.new_my_comment_id = comment.id
                 
                 print('replied to user:',comAuthor,comId)
 
             except:
                 print('Error occured with comment:',comId)
                 
+    def listenForReplise(self):
+       
+            for comId in self.my_comment_ids:
+                comment = self.comment(comId)
+                print(len(comment.replies))
                 
-    @property
-    def replied_to(self):
+                if len(comment.replies) != 0:
+                    if comment.replies[0].id in self.my_comment_ids:
+                        reply = 'I am just a freindly reddit bot'
+                        comment.replies[0].reply(reply)
+                        print('Replied to:',comId)
+                    else:
+                        print('Already replied to:',comId)
 
-        file = open('replied_to.txt', 'r')
-        replied_to = []
-        name = ' '
-        count = 0
-        while True:
-            count += 1
-            name = file.readline()
-            name = name.strip('\n')
-            if name == '':
-                break
-            else:    
-                replied_to.append(name)
+                else:
+                    print('no reply for:',comId)
+
+def main(bot):
+    print('\t\tWelcome to my reddit bot\n\n')
+    userInput = None
+    while userInput != '0':
+        print('''\nHere are your options:
+0.Exit
+1.Scan a subreddit and comment
+2.Check for replies
+3.See keywords
+4.Add keyword
+''')
+        userInput = input('Enter choice: ')
+        
+        if userInput == '1':
+
+            sub = input('Which reddit: ')
+            matches = bot.lookForKeyWords(sub)
+
                 
-        file.close()
-
-        return replied_to
-    
-    @replied_to.setter
-    def new_replied_to(self, newId):
-        file = open('replied_to.txt', 'a')
-        file.write(newId+'\n')
-        file.close()
-
+            print('\n\nNumber of matches',str(len(matches)))
+            for match in matches:
+                print(match)
+            bot.sendComments(matches)
             
-         
+        elif userInput == '2':
+            bot.listenForReplise()
+
+        elif userInput == '3':
+            for word in bot.keyWords:
+                print(word,end=' ')
+            
+        elif userInput == '4':
+            keyword = input('Enter new word: ')
+            bot.new_keyWord = keyword
+            print('Keyword added')
+            
+        elif userInput == '0':
+            print('Bye')
+            
 #initalsing instance of Reddit class
 bot = Bot(
     client_id = os.getenv("client_id"),
@@ -169,15 +268,6 @@ bot = Bot(
     username = os.getenv("redditUsername"),
     password = os.getenv("redditPassword"))
 
-matches = bot.lookForKeyWords('learnProgramming', numPost = 10, numCom = 10)
-#matches.append(bot.lookForKeyWords('python', numPost = 10, numCom = 20))
-#matches.append(bot.lookForKeyWords('developer', numPost = 10, numCom = 20))
-
-print('\n\nNumber of matches',str(len(matches)))
-for match in matches:
-    print(match)
-
-bot.sendComments(matches)
-
+main(bot)
 
 input('Enter to exit')
