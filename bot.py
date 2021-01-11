@@ -32,7 +32,20 @@ class Bot(pw.Reddit):
         file.close()
         
         return keywords
+	
+    @property
+    def commentTxt(self):
+            file = open('commentTxt.txt', 'r')
+            txt = file.read()
+            file.close()
+            return txt
     
+    @commentTxt.setter
+    def commentTxt(self, txt):
+            file = open('commentTxt.txt', 'w')
+            txt = file.write(txt)
+            file.close()
+            
     @keyWords.setter
     def new_keyWord(self, word):
         file = open('keyWords.txt', 'a')
@@ -124,21 +137,25 @@ class Bot(pw.Reddit):
         print('\n\n\t\tSearching',name,'\n\n')
 
         subreddit = self.subreddit(name)
+
+
+
         
         try:
             subreddit.id
         except:
             print('Invalid subreddit')
-            return []
+            return matches
+
+        matches = []
+        keywords = self.keyWords
         
         for submit in subreddit.hot(limit = numPost):
             print('New post:\n')
             print('Title:',submit.title,'\n')
             
             comments = submit.comments
-            matches = []
-            keywords = self.keyWords
-                        
+                                    
             for word in keywords:
                 for i in range(numCom):
                     try:
@@ -193,18 +210,19 @@ class Bot(pw.Reddit):
                 
             #added this try to combat rate error
             try:
-                self.new_replied_to = comId
+                
                 comment = self.comment(comId)
+                self.new_replied_to = comId
                 comment.reply(reply)
                 comment.upvote()
                 self.new_my_comment_id = comment.id
                 
                 print('replied to user:',comAuthor,comId)
 
-            except:
-                print('Error occured with comment:',comId)
+            except Exception as e:
+                print('Error occured with comment:',comId,'\n',e)
                 
-    def listenForReplise(self):
+    def replyToReplies(self, rep):
        
             for comId in self.my_comment_ids:
                 comment = self.comment(comId)
@@ -212,7 +230,7 @@ class Bot(pw.Reddit):
                 
                 if len(comment.replies) != 0:
                     if comment.replies[0].id in self.my_comment_ids:
-                        reply = 'I am just a freindly reddit bot'
+                        reply = rep
                         comment.replies[0].reply(reply)
                         print('Replied to:',comId)
                     else:
@@ -231,6 +249,8 @@ def main(bot):
 2.Check for replies
 3.See keywords
 4.Add keyword
+5.view comment
+6.change comment
 ''')
         userInput = input('Enter choice: ')
         
@@ -238,15 +258,17 @@ def main(bot):
 
             sub = input('Which reddit: ')
             matches = bot.lookForKeyWords(sub)
-
-                
+   
             print('\n\nNumber of matches',str(len(matches)))
             for match in matches:
                 print(match)
             bot.sendComments(matches)
             
         elif userInput == '2':
-            bot.listenForReplise()
+            msg = input('Enter a Reply for the replies')
+            if msg == None:
+                msg = 'I am just a freindly reddit bot'
+            bot.replyToReplies(msg)
 
         elif userInput == '3':
             for word in bot.keyWords:
@@ -256,6 +278,15 @@ def main(bot):
             keyword = input('Enter new word: ')
             bot.new_keyWord = keyword
             print('Keyword added')
+
+        elif userInput == '5':
+            print(bot.commentTxt)
+            
+        elif userInput == '6':
+            newTxt = input('Enter new comment: ')
+            if newTxt != '':
+                bot.commentTxt = newTxt
+                print('Commented changed to:',newTxt)
             
         elif userInput == '0':
             print('Bye')
