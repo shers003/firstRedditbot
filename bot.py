@@ -13,8 +13,10 @@ load_dotenv()
 #sub class of prasws Reddit class
 class Bot(pw.Reddit):
     ''' A reddit bot class '''
-
-    #only enter lower case
+    
+    ####### Bot Properties ####### 
+    ##############################
+    
     @property
     def keyWords(self):
         file = open('keyWords.txt', 'r')
@@ -33,51 +35,6 @@ class Bot(pw.Reddit):
         
         return keywords
 	
-    @property
-    def commentTxt(self):
-            file = open('commentTxt.txt', 'r')
-            txt = file.read()
-            file.close()
-            return txt
-    
-    @commentTxt.setter
-    def commentTxt(self, txt):
-            file = open('commentTxt.txt', 'w')
-            txt = file.write(txt)
-            file.close()
-            
-    @keyWords.setter
-    def new_keyWord(self, word):
-        file = open('keyWords.txt', 'a')
-        file.write(word+'\n')
-        file.close()
-
-    @property
-    def replied_to(self):
-        ''' Property returns list of comments ids '''
-        file = open('replied_to.txt', 'r')
-        replied_to = []
-        name = ' '
-        count = 0
-        while True:
-            count += 1
-            name = file.readline()
-            name = name.strip('\n')
-            if name == '':
-                break
-            else:    
-                replied_to.append(name)
-                
-        file.close()
-
-        return replied_to
-    
-    @replied_to.setter
-    def new_replied_to(self, newId):
-        file = open('replied_to.txt', 'a')
-        file.write(newId+'\n')
-        file.close()
-
     @property
     def my_comment_ids(self):
         ''' Property returns list of comments ids '''
@@ -98,12 +55,63 @@ class Bot(pw.Reddit):
         file.close()
 
         return replied_to
+		
+    @property
+    def commentTxt(self):
+        file = open('commentTxt.txt', 'r')
+        txt = file.read()
+        file.close()
+        return txt
+     
+    @property
+    def replied_to(self):
+        ''' Property returns list of comments ids '''
+        file = open('replied_to.txt', 'r')
+        replied_to = []
+        name = ' '
+        count = 0
+        while True:
+            count += 1
+            name = file.readline()
+            name = name.strip('\n')
+            if name == '':
+                break
+            else:    
+                replied_to.append(name)
+                
+        file.close()
+
+        return replied_to
+
+    ## Bot Properties setters #### 
+    ##############################
+    
+    @commentTxt.setter
+    def commentTxt(self, txt):
+        file = open('commentTxt.txt', 'w')
+        txt = file.write(txt)
+        file.close()
+            
+    @keyWords.setter
+    def new_keyWord(self, word):
+        file = open('keyWords.txt', 'a')
+        file.write(word+'\n')
+        file.close()
+    
+    @replied_to.setter
+    def new_replied_to(self, newId):
+        file = open('replied_to.txt', 'a')
+        file.write(newId+'\n')
+        file.close()
     
     @replied_to.setter
     def new_my_comment_id(self, newId):
         file = open('my_comment_ids.txt', 'a')
         file.write(newId+'\n')
         file.close()
+
+    ####### Bot Methods ########## 
+    ##############################
                        
     def __init__(self,
                  client_id,
@@ -137,10 +145,7 @@ class Bot(pw.Reddit):
         print('\n\n\t\tSearching',name,'\n\n')
 
         subreddit = self.subreddit(name)
-
-
-
-        
+ 
         try:
             subreddit.id
         except:
@@ -193,24 +198,12 @@ class Bot(pw.Reddit):
             if comId in self.replied_to:
                 print('already replied to',comId)
                 continue
-            
-            elif matchedWord == '420':
-                reply = '420 nice'
-                
-            elif matchedWord == '69':
-                reply = '69 nice'
-                
+                            
             else:
-                
-                reply = 'Yo ' + comAuthor + ' I noticed you said ' + matchedWord
-                reply += '. I know the chances are slim but if by any chance'
-                reply += ' you\'re from London, I just want to take this opertunity to say:'
-                reply += ' hope you have a great day, much love my g!!'
-                reply += '\n\nThis is a bot btw'
+                reply = self.commentTxt
                 
             #added this try to combat rate error
-            try:
-                
+            try:  
                 comment = self.comment(comId)
                 self.new_replied_to = comId
                 comment.reply(reply)
@@ -240,6 +233,7 @@ class Bot(pw.Reddit):
                     print('no reply for:',comId)
 
 def main(bot):
+    ''' Main code for console '''
     print('\t\tWelcome to my reddit bot\n\n')
     userInput = None
     while userInput != '0':
@@ -299,6 +293,100 @@ bot = Bot(
     username = os.getenv("redditUsername"),
     password = os.getenv("redditPassword"))
 
-main(bot)
+#main(bot)
+#input('Enter to exit')
 
-input('Enter to exit')
+##############################################
+############# GUI CODE #######################
+##############################################
+
+from tkinter import *
+
+class App(Frame):
+
+    def __init__(self, master):
+        ''' class constructor '''
+        super(App, self).__init__(master)
+        self.grid()
+        self.setupGui()
+
+    def setupGui(self):
+
+        #Title    
+        Label(self, text = os.getenv("redditUsername")
+              ).grid(row = 0, column = 1, sticky = W)
+        #see comment text button
+        Button(self,
+                text = 'See Comment',
+                command = self.getComment
+               ).grid(row = 1, column = 0, sticky = W)
+
+        #set comment text button
+        Button(self,
+                text = 'Set Comment',
+                command = self.setComment
+               ).grid(row = 2, column = 0, sticky = W)
+
+        #Comment text box
+        self.commentEntry = Text(self,
+                              width = 40,
+                              height = 5,
+                              wrap = WORD)
+        self.commentEntry.grid(row = 1, column = 1, columnspan = 3, sticky = W)
+
+        #see keywords text button
+        Button(self,
+               text = 'See Keywords',
+               command = self.getKeywords
+               ).grid(row = 3, column = 0, sticky = W)
+
+        #Add keywords button
+        Button(self,
+               text = 'Add Keywords',
+               value = 'Erase this NO CAPS',
+               command = self.AddKeywords
+               ).grid(row = 4, column = 0, sticky = W)
+
+        #Keywords textbox
+        self.keyWordEntry = Text(self,
+                              width = 40,
+                              height = 5,
+                              wrap = WORD)
+        self.keyWordEntry.grid(row = 3, column = 1, columnspan = 3, sticky = W)
+
+        self.addKeywordEntry = Entry(self,)
+        self.addKeywordEntry.grid(row = 4, column = 1, sticky = W)
+  
+    def getComment(self):
+        txt = bot.commentTxt
+        
+        self.commentEntry.delete(0.0, END)
+        self.commentEntry.insert(0.0, txt)
+
+    def setComment(self):
+        newTxt = self.commentEntry.get(0.0, END)
+        bot.commentTxt = newTxt
+        
+        self.commentEntry.delete(0.0, END)
+
+    def getKeywords(self):
+        self.keyWordEntry.delete(0.0, END)
+        
+        keywords = bot.keyWords
+        for word in keywords:
+            self.keyWordEntry.insert(END, word)
+            self.keyWordEntry.insert(END, ' ')
+            
+
+    def AddKeywords(self):
+        self.keyWordEntry.delete(0.0, END)
+        word = self.addKeywordEntry.get()
+        bot.new_keyWord = word
+        
+root = Tk()
+root.title('Reddit Bot')
+
+app = App(root)
+
+root.mainloop()
+
