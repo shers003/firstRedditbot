@@ -94,21 +94,36 @@ class Bot(pw.Reddit):
             
     @keyWords.setter
     def new_keyWord(self, word):
-        file = open('keyWords.txt', 'a')
-        file.write(word+'\n')
-        file.close()
-    
+        if word == None:
+            return 'Not valid'
+        elif word == '':
+            return 'Not valid'
+        else:
+            file = open('keyWords.txt', 'a')
+            file.write(word+'\n')
+            file.close()
+            
     @replied_to.setter
     def new_replied_to(self, newId):
-        file = open('replied_to.txt', 'a')
-        file.write(newId+'\n')
-        file.close()
+        if newId == None:
+            return 'Not valid'
+        elif newId == '':
+            return 'Not valid'
+        else:
+            file = open('replied_to.txt', 'a')
+            file.write(newId+'\n')
+            file.close()
     
     @replied_to.setter
     def new_my_comment_id(self, newId):
-        file = open('my_comment_ids.txt', 'a')
-        file.write(newId+'\n')
-        file.close()
+        if newId == None:
+            return 'Not valid'
+        elif newId == '':
+            return 'Not valid'
+        else:
+            file = open('my_comment_ids.txt', 'a')
+            file.write(newId+'\n')
+            file.close()
 
     ####### Bot Methods ########## 
     ##############################
@@ -293,25 +308,26 @@ bot = Bot(
     username = os.getenv("redditUsername"),
     password = os.getenv("redditPassword"))
 
-#main(bot)
-#input('Enter to exit')
+main(bot)
+input('Enter to exit')
 
 ##############################################
 ############# GUI CODE #######################
 ##############################################
-
+'''
 from tkinter import *
 
 class App(Frame):
 
-    def __init__(self, master):
-        ''' class constructor '''
+    def __init__(self, master, bot):
+        
         super(App, self).__init__(master)
+        self.bot = bot
         self.grid()
         self.setupGui()
 
     def setupGui(self):
-
+        
         #Title    
         Label(self, text = os.getenv("redditUsername")
               ).grid(row = 0, column = 1, sticky = W)
@@ -343,7 +359,6 @@ class App(Frame):
         #Add keywords button
         Button(self,
                text = 'Add Keywords',
-               value = 'Erase this NO CAPS',
                command = self.AddKeywords
                ).grid(row = 4, column = 0, sticky = W)
 
@@ -358,21 +373,21 @@ class App(Frame):
         self.addKeywordEntry.grid(row = 4, column = 1, sticky = W)
   
     def getComment(self):
-        txt = bot.commentTxt
+        txt = self.bot.commentTxt
         
         self.commentEntry.delete(0.0, END)
         self.commentEntry.insert(0.0, txt)
 
     def setComment(self):
         newTxt = self.commentEntry.get(0.0, END)
-        bot.commentTxt = newTxt
+        self.bot.commentTxt = newTxt
         
         self.commentEntry.delete(0.0, END)
 
     def getKeywords(self):
         self.keyWordEntry.delete(0.0, END)
         
-        keywords = bot.keyWords
+        keywords = self.bot.keyWords
         for word in keywords:
             self.keyWordEntry.insert(END, word)
             self.keyWordEntry.insert(END, ' ')
@@ -381,12 +396,12 @@ class App(Frame):
     def AddKeywords(self):
         self.keyWordEntry.delete(0.0, END)
         word = self.addKeywordEntry.get()
-        bot.new_keyWord = word
+        self.bot.new_keyWord = word
         
 root = Tk()
 root.title('Reddit Bot')
 
-app = App(root)
+app = App(root, bot)
 
 root.mainloop()
-
+'''
